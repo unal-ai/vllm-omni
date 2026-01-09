@@ -72,22 +72,36 @@ def retrieve_timesteps(
 ) -> tuple[torch.Tensor, int]:
     """
     Calls the scheduler's `set_timesteps` method and retrieves timesteps.
+    Handles custom timesteps and sigmas schedules.
     """
     accepts_timesteps = "timesteps" in set(inspect.signature(scheduler.set_timesteps).parameters.keys())
     accepts_sigmas = "sigmas" in set(inspect.signature(scheduler.set_timesteps).parameters.keys())
 
     if timesteps is not None and sigmas is not None:
-        raise ValueError("Cannot pass both `timesteps` and `sigmas`.")
-
-    if timesteps is not None:
+        # Both provided - check if scheduler supports both
+        if not accepts_timesteps and not accepts_sigmas:
+            raise ValueError(
+                f"The current scheduler class {scheduler.__class__}'s `set_timesteps` does not support custom"
+                f" timestep or sigma schedules. Please check whether you are using the correct scheduler."
+            )
+        scheduler.set_timesteps(timesteps=timesteps, sigmas=sigmas, device=device, **kwargs)
+        timesteps = scheduler.timesteps
+        num_inference_steps = len(timesteps)
+    elif timesteps is not None:
         if not accepts_timesteps:
-            raise ValueError(f"Scheduler {scheduler.__class__} doesn't support custom timesteps.")
+            raise ValueError(
+                f"The current scheduler class {scheduler.__class__}'s `set_timesteps` does not support custom"
+                f" timestep schedules. Please check whether you are using the correct scheduler."
+            )
         scheduler.set_timesteps(timesteps=timesteps, device=device, **kwargs)
         timesteps = scheduler.timesteps
         num_inference_steps = len(timesteps)
     elif sigmas is not None:
         if not accepts_sigmas:
-            raise ValueError(f"Scheduler {scheduler.__class__} doesn't support custom sigmas.")
+            raise ValueError(
+                f"The current scheduler class {scheduler.__class__}'s `set_timesteps` does not support custom"
+                f" sigma schedules. Please check whether you are using the correct scheduler."
+            )
         scheduler.set_timesteps(sigmas=sigmas, device=device, **kwargs)
         timesteps = scheduler.timesteps
         num_inference_steps = len(timesteps)
