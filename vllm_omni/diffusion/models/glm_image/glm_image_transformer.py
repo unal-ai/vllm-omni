@@ -2,12 +2,13 @@
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
 
 from collections.abc import Iterable
-from typing import Any, Enum
+from enum import Enum
+from typing import Any
 
 import torch
 import torch.nn as nn
 from diffusers.models.attention import FeedForward
-from diffusers.models.embeddings import GlmImageCombinedTimestepSizeEmbeddings
+from diffusers.models.transformers.transformer_glm_image import GlmImageCombinedTimestepSizeEmbeddings
 from diffusers.models.modeling_outputs import Transformer2DModelOutput
 from vllm.logger import init_logger
 from vllm.model_executor.layers.linear import QKVParallelLinear
@@ -412,8 +413,10 @@ class GlmImageAttention(nn.Module):
             # Only apply RoPE to image part (after text_seq_length)
             query_img = query[:, text_seq_length:, :, :]
             key_img = key[:, text_seq_length:, :, :]
-            query_img = self.rope(query_img, cos, sin)
-            key_img = self.rope(key_img, cos, sin)
+            from diffusers.models.embeddings import apply_rotary_emb
+            query_img = apply_rotary_emb(query_img,image_rotary_emb, sequence_dim=1, use_real_unbind_dim=-2)
+            # key_img = self.rope(key_img, cos, sin)
+            key_img = apply_rotary_emb(key_img,image_rotary_emb, sequence_dim=1, use_real_unbind_dim=-2)
             query = torch.cat([query[:, :text_seq_length, :, :], query_img], dim=1)
             key = torch.cat([key[:, :text_seq_length, :, :], key_img], dim=1)
 
@@ -457,7 +460,7 @@ class GlmImageTransformerBlock(nn.Module):
 
         # 1. Attention with AdaLN
         self.norm1 = GlmImageAdaLayerNormZero(time_embed_dim, dim)
-        self.attn = GlmImageAttention(
+        self.attn1 = GlmImageAttention(
             dim=dim,
             num_heads=num_attention_heads,
             head_dim=attention_head_dim,
@@ -510,7 +513,7 @@ class GlmImageTransformerBlock(nn.Module):
         ) = self.norm1(hidden_states, encoder_hidden_states, temb)
 
         # 2. Attention
-        attn_hidden_states, attn_encoder_hidden_states = self.attn(
+        attn_hidden_states, attn_encoder_hidden_states = self.attn1(
             hidden_states=norm_hidden_states,
             encoder_hidden_states=norm_encoder_hidden_states,
             image_rotary_emb=image_rotary_emb,
@@ -558,18 +561,20 @@ class GlmImageTransformer2DModel(CachedTransformer):
     def __init__(
         self,
         od_config: OmniDiffusionConfig,
-        patch_size: int = 2,
-        in_channels: int = 16,
-        num_layers: int = 30,
-        attention_head_dim: int = 40,
-        num_attention_heads: int = 64,
-        out_channels: int = 16,
-        text_embed_dim: int = 1472,
-        time_embed_dim: int = 512,
-        condition_dim: int = 256,
-        prior_vq_quantizer_codebook_size: int = 16384,
     ):
         super().__init__()
+        
+        patch_size = od_config.tf_model_config.patch_size
+        in_channels = od_config.tf_model_config.in_channels
+        out_channels = od_config.tf_model_config.out_channels
+        num_attention_heads = od_config.tf_model_config.num_attention_heads
+        attention_head_dim = od_config.tf_model_config.attention_head_dim
+        time_embed_dim = od_config.tf_model_config.time_embed_dim
+        condition_dim = od_config.tf_model_config.condition_dim
+        prior_vq_quantizer_codebook_size = od_config.tf_model_config.prior_vq_quantizer_codebook_size
+        text_embed_dim = od_config.tf_model_config.text_embed_dim
+        
+        
 
         # Get num_layers from config if available
         model_config = od_config.tf_model_config

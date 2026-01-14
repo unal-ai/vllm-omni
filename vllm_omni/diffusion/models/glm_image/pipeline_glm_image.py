@@ -72,8 +72,8 @@ def get_glm_image_post_process_func(od_config: OmniDiffusionConfig):
 
     image_processor = VaeImageProcessor(vae_scale_factor=vae_scale_factor)
 
-    def post_process_func(images: torch.Tensor):
-        return image_processor.postprocess(images)
+    def post_process_func(images: PIL.Image.Image):
+        return images
 
     return post_process_func
 
@@ -676,7 +676,7 @@ class GlmImagePipeline(nn.Module):
                     timestep=timestep,
                     target_size=target_size,
                     crop_coords=crop_coords,
-                    kv_caches=kv_caches,
+                    kv_cache=kv_caches,
                     return_dict=False,
                 )[0].float()
 
