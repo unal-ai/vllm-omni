@@ -29,6 +29,11 @@ _DIFFUSION_MODELS = {
         "pipeline_qwen_image_layered",
         "QwenImageLayeredPipeline",
     ),
+    "GlmImagePipeline": (
+        "glm_image",
+        "pipeline_glm_image",
+        "GlmImagePipeline",
+    ),
     "ZImagePipeline": (
         "z_image",
         "pipeline_z_image",
@@ -112,6 +117,7 @@ _DIFFUSION_POST_PROCESS_FUNCS = {
     "QwenImagePipeline": "get_qwen_image_post_process_func",
     "QwenImageEditPipeline": "get_qwen_image_edit_post_process_func",
     "QwenImageEditPlusPipeline": "get_qwen_image_edit_plus_post_process_func",
+    "GlmImagePipeline": "get_glm_image_post_process_func",
     "ZImagePipeline": "get_post_process_func",
     "OvisImagePipeline": "get_ovis_image_post_process_func",
     "WanPipeline": "get_wan22_post_process_func",
