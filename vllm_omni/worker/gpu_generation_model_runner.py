@@ -266,13 +266,15 @@ class GPUGenerationModelRunner(OmniGPUModelRunner):
         self,
         grammar_output: GrammarOutput | None = None,
     ) -> OmniModelRunnerOutput | AsyncModelRunnerOutput | IntermediateTensors:
+        # NOTE: Even though the model is non-autoregressive, we still need to have this function to match the interface of the engine core.
+        # In this case, this function 
         kv_connector_output = self.kv_connector_output
         self.kv_connector_output = None
 
         if self.execute_model_state is None:
             # Nothing to do (PP non-final rank case), output isn't used.
             if not kv_connector_output:
-                return None  # type: ignore[return-value]
+                return EMPTY_MODEL_RUNNER_OUTPUT
 
             # In case of PP with kv transfer, we need to pass through the
             # kv_connector_output
