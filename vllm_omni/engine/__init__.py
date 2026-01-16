@@ -9,11 +9,8 @@ from typing import Any
 import msgspec
 import torch
 from vllm.v1.engine import (
-    EngineCoreEvent,
     EngineCoreRequest,
-    FinishReason,
-    LogprobsLists,
-    LogprobsTensors,
+    EngineCoreOutput,
     SchedulerStats,
     UtilityOutput,
 )
@@ -79,36 +76,9 @@ class OmniEngineCoreRequest(EngineCoreRequest):
     additional_information: AdditionalInformationPayload | None = None
 
 
-class OmniEngineCoreOutput(
-    msgspec.Struct,
-    array_like=True,  # type: ignore[call-arg]
-    omit_defaults=True,  # type: ignore[call-arg]
-    gc=False,
-):  # type: ignore[call-arg]
-    request_id: str
-    new_token_ids: list[int]
-
-    new_logprobs: LogprobsLists | None = None
-    new_prompt_logprobs_tensors: LogprobsTensors | None = None
-
+class OmniEngineCoreOutput(EngineCoreOutput):
     pooling_output: dict[str, torch.Tensor] | None = None
 
-    finish_reason: FinishReason | None = None
-    stop_reason: int | str | None = None
-    events: list[EngineCoreEvent] | None = None
-    kv_transfer_params: dict[str, Any] | None = None
-
-    trace_headers: Mapping[str, str] | None = None
-    # The number of tokens with prefix cache hits.
-    num_cached_tokens: int = 0
-
-    # The number of NaNs in logits.
-    # A value greater than 0 indicates that the output is corrupted.
-    num_nans_in_logits: int = 0
-
-    @property
-    def finished(self) -> bool:
-        return self.finish_reason is not None
 
 
 class OmniEngineCoreOutputs(
