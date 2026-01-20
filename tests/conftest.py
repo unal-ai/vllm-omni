@@ -13,9 +13,26 @@ import torch
 import whisper
 import yaml
 from vllm.logger import init_logger
-from vllm.utils import get_open_port
+from vllm.utils.network_utils import get_open_port
 
 logger = init_logger(__name__)
+
+
+@pytest.fixture(autouse=True)
+def default_vllm_config():
+    """Set a default VllmConfig for all tests.
+
+    This fixture is auto-used for all tests to ensure that any test
+    that directly instantiates vLLM CustomOps (e.g., RMSNorm, LayerNorm)
+    or model components has the required VllmConfig context.
+
+    This fixture is required for vLLM 0.14.0+ where CustomOp initialization
+    requires a VllmConfig context set via set_current_vllm_config().
+    """
+    from vllm.config import VllmConfig, set_current_vllm_config
+
+    with set_current_vllm_config(VllmConfig()):
+        yield
 
 
 @pytest.fixture(autouse=True)
