@@ -93,6 +93,7 @@ def get_glm_image_pre_process_func(od_config: OmniDiffusionConfig):
 
             for img in images:
                 if isinstance(img, PIL.Image.Image):
+                    img = img.convert("RGB")
                     img_h, img_w = img.size[::-1]  # PIL is (width, height)
                 else:
                     img_h, img_w = img.shape[:2]
