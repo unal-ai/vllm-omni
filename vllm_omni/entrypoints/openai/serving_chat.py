@@ -1948,8 +1948,11 @@ class OmniOpenAIServingChat(OpenAIServingChat, AudioMixin):
                 # AsyncOmniDiffusion: direct call
                 result = await self._diffusion_engine.generate(**gen_kwargs)
             # Extract images from result
-            # Handle nested OmniRequestOutput structure where images might be in request_output
-            images = getattr(result.request_output, "images", [])
+            # Extract images from result
+            # Check result.images first (standard for diffusion outputs)
+            images = getattr(result, "images", [])
+            if not images and getattr(result, "request_output", None) is not None:
+                images = getattr(result.request_output, "images", [])
 
             # Convert images to base64 content
             image_contents: list[dict[str, Any]] = []
