@@ -502,6 +502,10 @@ class GlmImagePipeline(nn.Module):
                 token_ids_upsampled = self._upsample_token_ids(token_ids, grid_h, grid_w)
                 prior_token_image_ids.append(token_ids_upsampled)
 
+        # Manually trigger offload if needed (generate might bypass hooks or need early GPU placement)
+        if hasattr(self, "sequential_offloader"):
+            self.sequential_offloader.activate_encoder(self.vision_language_encoder)
+
         # Generate with AR model
         outputs = self.vision_language_encoder.generate(
             **inputs,
