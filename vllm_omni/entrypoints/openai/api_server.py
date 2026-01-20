@@ -83,7 +83,11 @@ from vllm.entrypoints.pooling.pooling.serving import OpenAIServingPooling
 from vllm.entrypoints.pooling.score.serving import ServingScores
 from vllm.entrypoints.serve.disagg.serving import ServingTokens
 from vllm.entrypoints.serve.tokenize.serving import OpenAIServingTokenization
-from vllm.entrypoints.tool_server import DemoToolServer, MCPToolServer, ToolServer
+try:
+    from vllm.entrypoints.tool_server import DemoToolServer, MCPToolServer, ToolServer
+except ImportError:
+    from vllm.entrypoints.mcp.tool_server import (DemoToolServer, MCPToolServer,
+                                                 ToolServer)
 from vllm.entrypoints.utils import (
     load_aware_call,
     process_chat_template,
