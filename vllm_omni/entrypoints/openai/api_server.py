@@ -48,13 +48,34 @@ except ImportError:
         ChatCompletionResponse,
     )
     from vllm.entrypoints.openai.engine.protocol import ErrorResponse
-from vllm.entrypoints.openai.serving_completion import OpenAIServingCompletion
-from vllm.entrypoints.openai.serving_models import BaseModelPath, OpenAIServingModels
-from vllm.entrypoints.openai.serving_responses import OpenAIServingResponses
-from vllm.entrypoints.openai.serving_transcription import (
-    OpenAIServingTranscription,
-    OpenAIServingTranslation,
-)
+
+# Serving imports - handle both old and new vllm module structures
+try:
+    from vllm.entrypoints.openai.serving_completion import OpenAIServingCompletion
+except ImportError:
+    from vllm.entrypoints.openai.completion.serving import OpenAIServingCompletion
+
+try:
+    from vllm.entrypoints.openai.serving_models import BaseModelPath, OpenAIServingModels
+except ImportError:
+    from vllm.entrypoints.openai.models.serving import OpenAIServingModels
+    from vllm.entrypoints.openai.models.protocol import BaseModelPath
+
+try:
+    from vllm.entrypoints.openai.serving_responses import OpenAIServingResponses
+except ImportError:
+    from vllm.entrypoints.openai.responses.serving import OpenAIServingResponses
+
+try:
+    from vllm.entrypoints.openai.serving_transcription import (
+        OpenAIServingTranscription,
+        OpenAIServingTranslation,
+    )
+except ImportError:
+    from vllm.entrypoints.openai.translations.serving import (
+        OpenAIServingTranscription,
+        OpenAIServingTranslation,
+    )
 from vllm.entrypoints.openai.utils import validate_json_request
 from vllm.entrypoints.pooling.classify.serving import ServingClassification
 from vllm.entrypoints.pooling.embed.serving import OpenAIServingEmbedding
