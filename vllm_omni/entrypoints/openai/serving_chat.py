@@ -48,10 +48,10 @@ except ImportError:
         ChatCompletionNamedToolChoiceParam, ChatCompletionRequest,
         ChatCompletionResponse, ChatCompletionResponseChoice,
         ChatCompletionResponseStreamChoice, ChatCompletionStreamResponse,
-        ChatMessage, DeltaFunctionCall, DeltaMessage, DeltaToolCall,
-        FunctionCall, FunctionDefinition)
+        ChatMessage, FunctionCall, FunctionDefinition)
     from vllm.entrypoints.openai.engine.protocol import (
-        ErrorInfo, ErrorResponse, PromptTokenUsageInfo, RequestResponseMetadata,
+        DeltaFunctionCall, DeltaMessage, DeltaToolCall, ErrorInfo,
+        ErrorResponse, PromptTokenUsageInfo, RequestResponseMetadata,
         ResponsesRequest, ToolCall, UsageInfo)
 try:
     from vllm.entrypoints.openai.serving_chat import OpenAIServingChat
