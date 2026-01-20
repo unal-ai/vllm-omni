@@ -171,7 +171,13 @@ def apply_offload_hooks(
     # Collect all encoders
     encoders: list[nn.Module] = []
     encoder_names: list[str] = []
-    for attr in ["text_encoder", "text_encoder_2", "text_encoder_3", "image_encoder"]:
+    for attr in [
+        "text_encoder",
+        "text_encoder_2",
+        "text_encoder_3",
+        "image_encoder",
+        "vision_language_encoder",
+    ]:
         if hasattr(model, attr) and getattr(model, attr) is not None:
             encoders.append(getattr(model, attr))
             encoder_names.append(attr)

@@ -270,7 +270,9 @@ class GlmImagePipeline(nn.Module):
             subfolder="vision_language_encoder",
             local_files_only=True,
             torch_dtype=torch.bfloat16,
-        ).to(self.device)
+        )
+        if not od_config.enable_cpu_offload:
+            self.vision_language_encoder = self.vision_language_encoder.to(self.device)
         self.vision_language_encoder.eval()
 
         # Load processor for AR model
@@ -283,7 +285,9 @@ class GlmImagePipeline(nn.Module):
             subfolder="text_encoder",
             local_files_only=True,
             torch_dtype=torch.bfloat16,
-        ).to(self.device)
+        )
+        if not od_config.enable_cpu_offload:
+            self.text_encoder = self.text_encoder.to(self.device)
         self.text_encoder.eval()
 
         # Load tokenizer for glyph encoding
@@ -293,7 +297,9 @@ class GlmImagePipeline(nn.Module):
         logger.info("Loading AutoencoderKL (VAE)...")
         self.vae = AutoencoderKL.from_pretrained(
             model_path, subfolder="vae", local_files_only=True, torch_dtype=torch.bfloat16
-        ).to(self.device)
+        )
+        if not od_config.enable_cpu_offload:
+            self.vae = self.vae.to(self.device)
         self.vae.eval()
 
         # Load transformer (DiT)
@@ -436,7 +442,7 @@ class GlmImagePipeline(nn.Module):
             Tuple of (prior_token_ids, prior_token_image_ids)
             prior_token_image_ids is a list of tensors, one per condition image
         """
-        device = self.vision_language_encoder.device
+        device = self.device
         height = (height // factor) * factor
         width = (width // factor) * factor
         is_text_to_image = image is None or len(image) == 0
