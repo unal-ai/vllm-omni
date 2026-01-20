@@ -33,32 +33,36 @@ from vllm.entrypoints.openai.parser.harmony_utils import (
     get_streamable_parser_for_assistant,
     parse_chat_output,
 )
-from vllm.entrypoints.openai.protocol import (
-    ChatCompletionNamedToolChoiceParam,
-    ChatCompletionRequest,
-    ChatCompletionResponse,
-    ChatCompletionResponseChoice,
-    ChatCompletionResponseStreamChoice,
-    ChatCompletionStreamResponse,
-    ChatMessage,
-    DeltaFunctionCall,
-    DeltaMessage,
-    DeltaToolCall,
-    ErrorInfo,
-    ErrorResponse,
-    FunctionCall,
-    FunctionDefinition,
-    PromptTokenUsageInfo,
-    RequestResponseMetadata,
-    ResponsesRequest,
-    ToolCall,
-    UsageInfo,
-)
-from vllm.entrypoints.openai.serving_chat import OpenAIServingChat
-from vllm.entrypoints.openai.serving_engine import (
-    ChatLikeRequest,
-    clamp_prompt_logprobs,
-)
+# Protocol imports - handle both old and new vllm module structures
+try:
+    from vllm.entrypoints.openai.protocol import (
+        ChatCompletionNamedToolChoiceParam, ChatCompletionRequest,
+        ChatCompletionResponse, ChatCompletionResponseChoice,
+        ChatCompletionResponseStreamChoice, ChatCompletionStreamResponse,
+        ChatMessage, DeltaFunctionCall, DeltaMessage, DeltaToolCall, ErrorInfo,
+        ErrorResponse, FunctionCall, FunctionDefinition, PromptTokenUsageInfo,
+        RequestResponseMetadata, ResponsesRequest, ToolCall, UsageInfo)
+except ImportError:
+    # New modular vllm structure (0.14+)
+    from vllm.entrypoints.openai.chat_completion.protocol import (
+        ChatCompletionNamedToolChoiceParam, ChatCompletionRequest,
+        ChatCompletionResponse, ChatCompletionResponseChoice,
+        ChatCompletionResponseStreamChoice, ChatCompletionStreamResponse,
+        ChatMessage, DeltaFunctionCall, DeltaMessage, DeltaToolCall,
+        FunctionCall, FunctionDefinition)
+    from vllm.entrypoints.openai.engine.protocol import (
+        ErrorInfo, ErrorResponse, PromptTokenUsageInfo, RequestResponseMetadata,
+        ResponsesRequest, ToolCall, UsageInfo)
+try:
+    from vllm.entrypoints.openai.serving_chat import OpenAIServingChat
+except ImportError:
+    from vllm.entrypoints.openai.chat_completion.serving import OpenAIServingChat
+try:
+    from vllm.entrypoints.openai.serving_engine import (ChatLikeRequest,
+                                                       clamp_prompt_logprobs)
+except ImportError:
+    from vllm.entrypoints.openai.engine.serving import (ChatLikeRequest,
+                                                       clamp_prompt_logprobs)
 from vllm.entrypoints.openai.utils import maybe_filter_parallel_tool_calls
 from vllm.entrypoints.utils import should_include_usage
 from vllm.inputs.data import PromptType, TokensPrompt
