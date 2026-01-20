@@ -270,9 +270,7 @@ class GlmImagePipeline(nn.Module):
             subfolder="vision_language_encoder",
             local_files_only=True,
             torch_dtype=torch.bfloat16,
-        )
-        if not od_config.enable_cpu_offload:
-            self.vision_language_encoder = self.vision_language_encoder.to(self.device)
+        ).to(self.device)
         self.vision_language_encoder.eval()
 
         # Load processor for AR model
@@ -285,9 +283,7 @@ class GlmImagePipeline(nn.Module):
             subfolder="text_encoder",
             local_files_only=True,
             torch_dtype=torch.bfloat16,
-        )
-        if not od_config.enable_cpu_offload:
-            self.text_encoder = self.text_encoder.to(self.device)
+        ).to(self.device)
         self.text_encoder.eval()
 
         # Load tokenizer for glyph encoding
@@ -297,9 +293,7 @@ class GlmImagePipeline(nn.Module):
         logger.info("Loading AutoencoderKL (VAE)...")
         self.vae = AutoencoderKL.from_pretrained(
             model_path, subfolder="vae", local_files_only=True, torch_dtype=torch.bfloat16
-        )
-        if not od_config.enable_cpu_offload:
-            self.vae = self.vae.to(self.device)
+        ).to(self.device)
         self.vae.eval()
 
         # Load transformer (DiT)
@@ -442,7 +436,7 @@ class GlmImagePipeline(nn.Module):
             Tuple of (prior_token_ids, prior_token_image_ids)
             prior_token_image_ids is a list of tensors, one per condition image
         """
-        device = self.device
+        device = self.vision_language_encoder.device
         height = (height // factor) * factor
         width = (width // factor) * factor
         is_text_to_image = image is None or len(image) == 0
@@ -478,11 +472,6 @@ class GlmImagePipeline(nn.Module):
         if image is not None and image_grid_thw is not None and len(image_grid_thw) > 1:
             # Get features only for condition images (exclude target image grid)
             condition_grid = image_grid_thw[:-1]
-
-            # Manually trigger offload if needed (as get_image_features doesn't trigger forward hooks)
-            if hasattr(self, "sequential_offloader"):
-                self.sequential_offloader.activate_encoder(self.vision_language_encoder)
-
             prior_token_image_embed = self.vision_language_encoder.get_image_features(
                 inputs["pixel_values"], condition_grid
             )
@@ -501,10 +490,6 @@ class GlmImagePipeline(nn.Module):
                 # Upsample 2x (from d32 to d64)
                 token_ids_upsampled = self._upsample_token_ids(token_ids, grid_h, grid_w)
                 prior_token_image_ids.append(token_ids_upsampled)
-
-        # Manually trigger offload if needed (generate might bypass hooks or need early GPU placement)
-        if hasattr(self, "sequential_offloader"):
-            self.sequential_offloader.activate_encoder(self.vision_language_encoder)
 
         # Generate with AR model
         outputs = self.vision_language_encoder.generate(
