@@ -18,7 +18,11 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from starlette.datastructures import State
 from starlette.routing import Route
 from vllm.engine.protocol import EngineClient
-from vllm.entrypoints.anthropic.serving_messages import AnthropicServingMessages
+
+try:
+    from vllm.entrypoints.anthropic.serving_messages import AnthropicServingMessages
+except ImportError:
+    AnthropicServingMessages = None  # type: ignore[misc,assignment]
 from vllm.entrypoints.launcher import serve_http
 from vllm.entrypoints.logger import RequestLogger
 from vllm.entrypoints.openai.api_server import (
@@ -597,7 +601,7 @@ async def omni_init_app_state(
             enable_prompt_tokens_details=args.enable_prompt_tokens_details,
             enable_force_include_usage=args.enable_force_include_usage,
         )
-        if "generate" in supported_tasks
+        if "generate" in supported_tasks and AnthropicServingMessages is not None
         else None
     )
     state.serving_tokens = (
