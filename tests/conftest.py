@@ -19,6 +19,23 @@ logger = init_logger(__name__)
 
 
 @pytest.fixture(autouse=True)
+def default_vllm_config():
+    """Set a default VllmConfig for all tests.
+
+    This fixture is auto-used for all tests to ensure that any test
+    that directly instantiates vLLM CustomOps (e.g., RMSNorm, LayerNorm)
+    or model components has the required VllmConfig context.
+
+    This fixture is required for vLLM 0.14.0+ where CustomOp initialization
+    requires a VllmConfig context set via set_current_vllm_config().
+    """
+    from vllm.config import VllmConfig, set_current_vllm_config
+
+    with set_current_vllm_config(VllmConfig()):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def clean_gpu_memory_between_tests():
     if os.getenv("VLLM_TEST_CLEAN_GPU_MEMORY", "0") != "1":
         yield
