@@ -478,6 +478,11 @@ class GlmImagePipeline(nn.Module):
         if image is not None and image_grid_thw is not None and len(image_grid_thw) > 1:
             # Get features only for condition images (exclude target image grid)
             condition_grid = image_grid_thw[:-1]
+
+            # Manually trigger offload if needed (as get_image_features doesn't trigger forward hooks)
+            if hasattr(self, "sequential_offloader"):
+                self.sequential_offloader.activate_encoder(self.vision_language_encoder)
+
             prior_token_image_embed = self.vision_language_encoder.get_image_features(
                 inputs["pixel_values"], condition_grid
             )

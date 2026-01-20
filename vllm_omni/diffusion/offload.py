@@ -98,6 +98,16 @@ class SequentialOffloader:
         torch.cuda.synchronize()
         logger.debug("Swapped: DiT -> CPU, encoder -> GPU")
 
+    def activate_encoder(self, encoder: nn.Module) -> None:
+        """Manually activate an encoder (offload DiT, onload encoder).
+
+        Useful for methods that don't trigger forward pre-hooks (e.g. generate).
+        """
+        if encoder not in self.encoders:
+            return
+
+        self._encoder_pre_hook(encoder, ())
+
     def register(self) -> None:
         """Register forward pre-hooks on DiT and encoders."""
         # Hook on each DiT-like module
@@ -199,7 +209,11 @@ def apply_offload_hooks(
                     p.data = p.data.pin_memory()
 
     # Register sequential offload hooks
-    SequentialOffloader(dit_modules, encoders, device, pin).register()
+    offloader = SequentialOffloader(dit_modules, encoders, device, pin)
+    offloader.register()
+    
+    # Attach offloader to model for manual control
+    model.sequential_offloader = offloader
 
     logger.info(
         "CPU offload enabled: %s <-> %s (mutual exclusion)",
