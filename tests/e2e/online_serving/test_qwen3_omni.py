@@ -18,7 +18,7 @@ from pathlib import Path
 import openai
 import pytest
 from vllm.assets.video import VideoAsset
-from vllm.utils import get_open_port
+from vllm.utils.network_utils import get_open_port
 
 from vllm_omni.utils import is_rocm
 

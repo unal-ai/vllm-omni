@@ -13,7 +13,7 @@ import torch
 import whisper
 import yaml
 from vllm.logger import init_logger
-from vllm.utils import get_open_port
+from vllm.utils.network_utils import get_open_port
 
 logger = init_logger(__name__)
 
